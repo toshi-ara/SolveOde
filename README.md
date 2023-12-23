@@ -18,6 +18,15 @@
       小数の丸め誤差によって終了時間のデータが欠損する
     - Rustの`ode_solvers`が該当する
 
+## ソルバー関数
++ rkf45
+    + ルンゲ＝クッタ法 (Runge-Kutta method)
++ dopri5
+    + ドルマン=プリンス法 (Dormand-Prince method order 5)
++ dop853
+    + ドルマン=プリンス法 (Dormand-Prince method order 8)
+
+
 ## 例
 [Javascriptで8次のルンゲクッタ](https://zenn.dev/yonda/articles/71aef28aa46fcb)
 に記載されている例
