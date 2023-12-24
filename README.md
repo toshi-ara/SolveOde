@@ -77,6 +77,10 @@ npm run build  # bundle using webpack
 node dist/main.js
 ```
 
+返り値は`[number[], number[][]]`
+- 要素1： 時間の配列
+- 要素2： "値の配列"の配列
+
 ```
 [
   [
