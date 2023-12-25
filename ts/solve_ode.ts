@@ -37,11 +37,11 @@ type TypeCalcRes = [number[], number | null]
 // input:
 //   func: ordinary differential equation (ODE) you want to specify
 //   solver: rkf45, dopri5, or dop853
+//   param: Parameters for ODE
 //   start:
 //   end:
 //   h: step
 //   amt: initial values (number[])
-//   param: Parameters for ODE
 //
 // output: TypeResult
 //   [
@@ -51,19 +51,19 @@ type TypeCalcRes = [number[], number | null]
 //////////////////////////////////
 
 export function SolveOde(func: (x: number[],
-                             t: number,
-                             param: TypeParam) => TypeFuncRes,
+                             param: TypeParam,
+                             t: number) => TypeFuncRes,
                   solver: (func: (x: number[],
-                             t: number,
-                             param: TypeParam) => TypeFuncRes,
+                             param: TypeParam,
+                             t: number) => TypeFuncRes,
+                      param: TypeParam,
                       x: number[],
                       t: number,
                       h: number,
-                      param: TypeParam,
                       adaptive?: boolean | TypeAdaptive) => TypeOdeRes,
+                  param: TypeParam,
                   start: number, end: number, h: number,
-                  amt: number[],
-                  param: TypeParam): TypeResult {
+                  amt: number[]): TypeResult {
     const n = Math.floor((end - start) / h);
     let t = start;
 
@@ -73,7 +73,7 @@ export function SolveOde(func: (x: number[],
     for (let i = 0; i < n - 1; i++) {
         x[i] = t;
         y[i] = amt;
-        [amt] = solver(func, amt, t, h, param, false);
+        [amt] = solver(func, param, amt, t, h, false);
         t += h;
     }
     // last - 1
@@ -81,7 +81,7 @@ export function SolveOde(func: (x: number[],
     y[n - 1] = amt;
 
     // last
-    [amt] = solver(func, amt, t, end - t, param, false);
+    [amt] = solver(func, param, amt, t, end - t, false);
     x[n] = end;
     y[n] = amt;
 
@@ -138,18 +138,18 @@ function estimateError(x: number[], x_: number[],
 // Springer.
 //////////////////////////////////
 
-function _ode(func: (x: number[],
+function _ode(func: (param: TypeParam,
+                     x: number[],
                      t: number,
                      h: number,
-                     param: TypeParam,
                      adaptive?: TypeAdaptiveOde) => TypeCalcRes,
+              param: TypeParam,
               x: number[],
               t: number,
               h: number,
-              param: TypeParam,
               adaptive?: TypeAdaptive): TypeOdeRes {
     if (!adaptive) {
-        const [x_] = func(x, t, h, param);
+        const [x_] = func(param, x, t, h);
         return [x_, t + h, h];
     }
 
@@ -173,7 +173,7 @@ function _ode(func: (x: number[],
     let h_ = h;
     let i = 0;
     while (i++ < maxiter) {
-        const [x_, err] = func(x, t, h_, param, {
+        const [x_, err] = func(param, x, t, h_, {
             atol: adaptive.atol,
             rtol: adaptive.rtol
         });
@@ -192,41 +192,41 @@ function _ode(func: (x: number[],
 
 // Runge-Kutta-Fehlberg
 export function rkf45(func: (x: number[],
-                             t: number,
-                             param: TypeParam) => TypeFuncRes,
+                             param: TypeParam,
+                             t: number) => TypeFuncRes,
+                      param: TypeParam,
                       x: number[],
                       t: number,
                       h: number,
-                      param: TypeParam,
                       adaptive?: boolean | TypeAdaptive): TypeOdeRes {
-    function calc(x: number[],
+    function calc(param: TypeParam,
+                  x: number[],
                   t: number,
                   h: number,
-                  param: TypeParam,
                   adaptive?: TypeAdaptiveOde): TypeCalcRes {
-        const k1 = func(x, t, param);
+        const k1 = func(x, param, t);
         const k2 = func(adds(x,
                              multiple(1 / 4 * h, k1)),
-                        t + 1 / 4 * h,
-                        param);
+                        param,
+                        t + 1 / 4 * h);
         const k3 = func(adds(x,
                              multiple(3 / 32 * h, k1),
                              multiple(9 / 32 * h, k2)),
-                        t + 3 / 8 * h,
-                        param);
+                        param,
+                        t + 3 / 8 * h);
         const k4 = func(adds(x,
                              multiple(1932 / 2197 * h, k1),
                              multiple(-7200 / 2197 * h, k2),
                              multiple(7296 / 2197 * h, k3)),
-                        t + 12 / 13 * h,
-                        param);
+                        param,
+                        t + 12 / 13 * h);
         const k5 = func(adds(x,
                              multiple(439 / 216 * h, k1),
                              multiple(-8 * h, k2),
                              multiple(3680 / 513 * h, k3),
                              multiple(-845 / 4104 * h, k4)),
-                        t + h,
-                        param);
+                        param,
+                        t + h);
         const x_ = adds(x,
                         multiple(25 / 216 * h, k1),
                         multiple(1408 / 2565 * h, k3),
@@ -242,8 +242,8 @@ export function rkf45(func: (x: number[],
                              multiple(-3544 / 2565 * h, k3),
                              multiple(1859 / 4104 * h, k4),
                              multiple(-11 / 40 * h, k5)),
-                        t + 0.5 * h,
-                        param);
+                        param,
+                        t + 0.5 * h);
         const delta = adds(multiple(71 / 57600 * h, k1),
                            multiple(-128 / 4275 * h, k3),
                            multiple(-2197 / 75240 * h, k4),
@@ -278,55 +278,55 @@ export function rkf45(func: (x: number[],
             facmin: userOptions?.facmin,
         }
     })();
-    return _ode(calc, x, t, h, param, options);
+    return _ode(calc, param, x, t, h, options);
 };
 
 
 // Dormand-Prince method order 5
 export function dopri5(func: (x: number[],
-                              t: number,
-                              param: TypeParam) => TypeFuncRes,
+                              param: TypeParam,
+                              t: number) => TypeFuncRes,
+                       param: TypeParam,
                        x: number[],
                        t: number,
                        h: number,
-                       param: TypeParam,
                        adaptive?: boolean | TypeAdaptive): TypeOdeRes {
-    function calc(x: number[],
+    function calc(param: TypeParam,
+                  x: number[],
                   t: number,
                   h: number,
-                  param: TypeParam,
                   adaptive?: TypeAdaptiveOde): TypeCalcRes {
-        const k1 = func(x, t, param);
+        const k1 = func(x, param, t);
         const k2 = func(adds(x,
                              multiple(1 / 5 * h, k1)),
-                        t + 1 / 5 * h,
-                        param);
+                        param,
+                        t + 1 / 5 * h);
         const k3 = func(adds(x,
                              multiple(3 / 40 * h, k1),
                              multiple(9 / 40 * h, k2)),
-                        t + 3 / 10 * h,
-                        param);
+                        param,
+                        t + 3 / 10 * h);
         const k4 = func(adds(x,
                              multiple(44 / 45 * h, k1),
                              multiple(-56 / 15 * h, k2),
                              multiple(32 / 9 * h, k3)),
-                        t + 4 / 5 * h,
-                        param);
+                        param,
+                        t + 4 / 5 * h);
         const k5 = func(adds(x,
                              multiple(19372 / 6561 * h, k1),
                              multiple(-25360 / 2187 * h, k2),
                              multiple(64448 / 6561 * h, k3),
                              multiple(-212 / 729 * h, k4)),
-                        t + 8 / 9 * h,
-                        param);
+                        param,
+                        t + 8 / 9 * h);
         const k6 = func(adds(x,
                              multiple(9017 / 3168 * h, k1),
                              multiple(-355 / 33 * h, k2),
                              multiple(46732 / 5247 * h, k3),
                              multiple(49 / 176 * h, k4),
                              multiple(-5103 / 18656 * h, k5)),
-                        t + h,
-                        param);
+                        param,
+                        t + h);
         const x_ = adds(x,
                         multiple(35 / 384 * h, k1),
                         multiple(500 / 1113 * h, k3),
@@ -344,8 +344,8 @@ export function dopri5(func: (x: number[],
                              multiple(125 / 192 * h, k4),
                              multiple(-2187 / 6784 * h, k5),
                              multiple(11 / 84 * h, k6)),
-                        t + h,
-                        param);
+                        param,
+                        t + h);
         const delta = adds(multiple(71 / 57600 * h, k1),
                            multiple(-71 / 16695 * h, k3),
                            multiple(71 / 1920 * h, k4),
@@ -382,7 +382,7 @@ export function dopri5(func: (x: number[],
             facmin: userOptions?.facmin,
         }
     })();
-    return _ode(calc, x, t, h, param, options);
+    return _ode(calc, param, x, t, h, options);
 };
 
 
@@ -391,60 +391,60 @@ export function dopri5(func: (x: number[],
 // dop853.f
 // http://www.unige.ch/~hairer/software.html
 export function dop853(func: (x: number[],
-                              t: number,
-                              param: TypeParam) => TypeFuncRes,
+                              param: TypeParam,
+                              t: number) => TypeFuncRes,
+                       param: TypeParam,
                        x: number[],
                        t: number,
                        h: number,
-                       param: TypeParam,
                        adaptive?: boolean | TypeAdaptive): TypeOdeRes {
-    function calc(x: number[],
+    function calc(param: TypeParam,
+                  x: number[],
                   t: number,
                   h: number,
-                  param: TypeParam,
                   adaptive?: TypeAdaptiveOde): TypeCalcRes {
-        const k1 = func(x, t, param);
+        const k1 = func(x, param, t);
         const k2 = func(adds(x,
                              multiple(5.26001519587677318785587544488e-2 * h, k1)),
-                        t + 0.526001519587677318785587544488e-1 * h,
-                        param);
+                        param,
+                        t + 0.526001519587677318785587544488e-1 * h);
         const k3 = func(adds(x,
                              multiple(1.97250569845378994544595329183e-2 * h, k1),
                              multiple(5.91751709536136983633785987549e-2 * h, k2)),
-                        t + 0.789002279381515978178381316732e-1 * h,
-                        param);
+                        param,
+                        t + 0.789002279381515978178381316732e-1 * h);
         const k4 = func(adds(x,
                              multiple(2.95875854768068491816892993775e-2 * h, k1),
                              multiple(8.87627564304205475450678981324e-2 * h, k3)),
-                        t + 0.118350341907227396726757197510 * h,
-                        param);
+                        param,
+                        t + 0.118350341907227396726757197510 * h);
         const k5 = func(adds(x,
                              multiple(2.41365134159266685502369798665e-1 * h, k1),
                              multiple(-8.84549479328286085344864962717e-1 * h, k3),
                              multiple(9.24834003261792003115737966543e-1 * h, k4)),
-                        t + 0.281649658092772603273242802490 * h,
-                        param);
+                        param,
+                        t + 0.281649658092772603273242802490 * h);
         const k6 = func(adds(x,
                              multiple(3.7037037037037037037037037037e-2 * h, k1),
                              multiple(1.70828608729473871279604482173e-1 * h, k4),
                              multiple(1.25467687566822425016691814123e-1 * h, k5)),
-                        t + 0.333333333333333333333333333333 * h,
-                        param);
+                        param,
+                        t + 0.333333333333333333333333333333 * h);
         const k7 = func(adds(x,
                              multiple(3.7109375e-2 * h, k1),
                              multiple(1.70252211019544039314978060272e-1 * h, k4),
                              multiple(6.02165389804559606850219397283e-2 * h, k5),
                              multiple(-1.7578125e-2 * h, k6)),
-                        t + 0.25 * h,
-                        param);
+                        param,
+                        t + 0.25 * h);
         const k8 = func(adds(x,
                              multiple(3.70920001185047927108779319836e-2 * h, k1),
                              multiple(1.70383925712239993810214054705e-1 * h, k4),
                              multiple(1.07262030446373284651809199168e-1 * h, k5),
                              multiple(-1.53194377486244017527936158236e-2 * h, k6),
                              multiple(8.27378916381402288758473766002e-3 * h, k7)),
-                        t + 0.307692307692307692307692307692 * h,
-                        param);
+                        param,
+                        t + 0.307692307692307692307692307692 * h);
         const k9 = func(adds(x,
                              multiple(6.24110958716075717114429577812e-1 * h, k1),
                              multiple(-3.36089262944694129406857109825 * h, k4),
@@ -452,8 +452,8 @@ export function dop853(func: (x: number[],
                              multiple(2.75920996994467083049415600797e1 * h, k6),
                              multiple(2.01540675504778934086186788979e1 * h, k7),
                              multiple(-4.34898841810699588477366255144e1 * h, k8)),
-                        t + 0.651282051282051282051282051282 * h,
-                        param);
+                        param,
+                        t + 0.651282051282051282051282051282 * h);
         const k10 = func(adds(x,
                               multiple(4.77662536438264365890433908527e-1 * h, k1),
                               multiple(-2.48811461997166764192642586468 * h, k4),
@@ -462,8 +462,8 @@ export function dop853(func: (x: number[],
                               multiple(1.52792336328824235832596922938e1 * h, k7),
                               multiple(-3.32882109689848629194453265587e1 * h, k8),
                               multiple(-2.03312017085086261358222928593e-2 * h, k9)),
-                         t + 0.6 * h,
-                         param);
+                         param,
+                         t + 0.6 * h);
         const k11 = func(adds(x,
                               multiple(-9.3714243008598732571704021658e-1 * h, k1),
                               multiple(5.18637242884406370830023853209 * h, k4),
@@ -473,8 +473,8 @@ export function dop853(func: (x: number[],
                               multiple(2.27394870993505042818970056734e1 * h, k8),
                               multiple(2.49360555267965238987089396762 * h, k9),
                               multiple(-3.0467644718982195003823669022 * h, k10)),
-                         t + 0.857142857142857142857142857142 * h,
-                         param);
+                         param,
+                         t + 0.857142857142857142857142857142 * h);
         const k12 = func(adds(x,
                               multiple(2.27331014751653820792359768449 * h, k1),
                               multiple(-1.05344954667372501984066689879e1 * h, k4),
@@ -485,8 +485,8 @@ export function dop853(func: (x: number[],
                               multiple(-8.87285693353062954433549289258 * h, k9),
                               multiple(1.23605671757943030647266201528e1 * h, k10),
                               multiple(6.43392746015763530355970484046e-1 * h, k11)),
-                         t + h,
-                         param);
+                         param,
+                         t + h);
 
         const x_ = adds(x,
                         multiple(5.42937341165687622380535766363e-2 * h, k1),
@@ -560,6 +560,6 @@ export function dop853(func: (x: number[],
             facmin: userOptions?.facmin,
         }
     })();
-    return _ode(calc, x, t, h, param, options);
+    return _ode(calc, param, x, t, h, options);
 };
 
