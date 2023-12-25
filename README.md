@@ -60,7 +60,7 @@ function func(x: number[], param: TypeParam, _t: number): TypeFuncRes {
 let param = [0.15]
 
 let res = SolveOde(
-    func,        // ODE, solver
+    func,        // ODE
     dop853,      // solver
     param,       // parameters
     0, 20, 0.5,  // start, end, step
