@@ -31,7 +31,7 @@
 [Javascriptで8次のルンゲクッタ](https://zenn.dev/yonda/articles/71aef28aa46fcb)
 に記載されている例
 
-- $\dfrac{x_{0}}{dt} = x_{1}$
+- $\dfrac{dx_{0}}{dt} = x_{1}$
 - $\dfrac{dx_{1}}{dt} = -2\gamma x_{1} - x_{0}$
 - パラメータ値: $\gamma = 0.15$
 - 初期値: $x_{0} = 1, x_{1} = -0.15$

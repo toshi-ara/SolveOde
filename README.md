@@ -26,7 +26,7 @@ Since he says "Please feel free to copy and paste the code in this article as yo
 ## Example
 The example in https://zenn.dev/yonda/articles/71aef28aa46fcb (in Japanese)
 
-- $\dfrac{x_{0}}{dt} = x_{1}$
+- $\dfrac{dx_{0}}{dt} = x_{1}$
 - $\dfrac{dx_{1}}{dt} = -2\gamma x_{1} - x_{0}$
 - parameter values: $\gamma = 0.15$
 - initial values: $x_{0} = 1, x_{1} = -0.15$
