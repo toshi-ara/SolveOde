@@ -42,12 +42,12 @@ import { SolveOde, rkf45, dopri5, dop853 } from "./solve_ode";
 
 ### 常微分方程式の定義
 
-```{typescript}
+```typescript
 // Definition of ODE
 //
 // dx0/dt = x1
 // dx1/dt = -2 * param[0] * x1 - x0
-function func(x: number[], _t: number, param: TypeParam): TypeFuncRes {
+function func(x: number[], param: TypeParam, _t: number): TypeFuncRes {
     return [
         x[1],
         -2 * param[0] * x[1] - x[0]
@@ -56,20 +56,21 @@ function func(x: number[], _t: number, param: TypeParam): TypeFuncRes {
 ```
 
 ### パラメータ値の設定および解析
-```{typescript}
-const param = [0.15];
+```typescript
+let param = [0.15]
 
-const res = SolveOde(
-    func, dop853,  // ODE, solver
-    0, 20, 0.5,    // start, end, step
-    [1, -0.15],    // initial values
-    param          // parameters
+let res = SolveOde(
+    func,        // ODE, solver
+    dop853,      // solver
+    param,       // parameters
+    0, 20, 0.5,  // start, end, step
+    [1, -0.15]   // initial values
 );
 console.log(res)
 ```
 
 ### 実行
-``` {bash}
+```bash
 # download from repository
 npm install
 npm run build  # bundle using webpack
@@ -81,7 +82,7 @@ node dist/main.js
 - 要素1： 時間の配列
 - 要素2： "値の配列"の配列
 
-```
+```typescript
 [
   [
      0,  0.5,  1,  1.5,  2,  2.5,  3,  3.5,
@@ -136,6 +137,4 @@ node dist/main.js
   ]
 ]
 ```
-
-
 
