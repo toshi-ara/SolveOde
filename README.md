@@ -31,6 +31,11 @@
 [Javascriptで8次のルンゲクッタ](https://zenn.dev/yonda/articles/71aef28aa46fcb)
 に記載されている例
 
+- $dx_{0}/dt = x_{1}$
+- $dx_{1}/dt = -2\gamma x_{1} - x_{0}$
+- パラメータ値: $\gamma = 0.15$
+- 初期値: $x_{0} = 1, x_{1} = -0.15$
+
 ### 必要な型および関数のインポート
 ```
 import { TypeFuncRes, TypeParam } from "./solve_ode";
@@ -44,13 +49,10 @@ import { SolveOde, rkf45, dopri5, dop853 } from "./solve_ode";
 
 ```typescript
 // Definition of ODE
-//
-// dx0/dt = x1
-// dx1/dt = -2 * param[0] * x1 - x0
 function func(x: number[], param: TypeParam, _t: number): TypeFuncRes {
     return [
-        x[1],
-        -2 * param[0] * x[1] - x[0]
+        x[1],                        // dx0/dt = x1
+        -2 * param[0] * x[1] - x[0]  // dx1/dt = -2 * param[0] * x1 - x0
     ];
 }
 ```
