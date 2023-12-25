@@ -1,37 +1,42 @@
-# Solve ordinary differential equations (ODEs) numerically with Typescript
-## Reference URL
+# Typescriptで常微分方程式を数値的に解く
+## 参考URL
 
-I modified the Typescript codes in
- https://zenn.dev/yonda/articles/71aef28aa46fcb (in Japanese).
-Since he says "Please feel free to copy and paste the code in this article as you like," I modified and published them under the MIT License.
+基本的に[Javascriptで8次のルンゲクッタ](https://zenn.dev/yonda/articles/71aef28aa46fcb)
+に記載されているプログラムを改変しました。
 
-## Major features
-1. Changed the arguments of solver functions (rk45, dopri5, dop853)
-   so that they can take parameters
-   used in ordinary differential equation (ODE) functions.
-    - the parameter had to be set as a global variable
-      before the change
-1. Values are calculated up to the specified end time
-    in the `SolveOde` function, which numerically solves ODEs.
-    - If you do something like `start_time =+ interval`,
-      the data at end time is missing due to decimal rounding error
-    - Rust's `ode_solvers` applies
+"本記事のコード自体はお好きにコピペをどうぞ"
+と書かれていたため、
+改変した上でMIT Licenseで公開します。
 
-## Solver functions
-+ `rkf45`: Runge-Kutta method
-+ `dopri5`: Dormand-Prince method order 5
-+ `dop853`: Dormand-Prince method order 8
+## 主な特徴
+1. ソルバー関数（rk45, dopri5, dop853）の引数に
+   常微分方程式の関数で使用するパラメータを取れるように変更した
+    - 変更前はパラメータをグローバル変数として設定する必要があったため
+1. 常微分方程式を数値的に解く関数`SolveOde`内で
+   指定した終了時間まで値を求めるようにした
+    - `開始時間 =+ 間隔`のようにすると、
+      小数の丸め誤差によって終了時間のデータが欠損する
+    - Rustの`ode_solvers`が該当する
+
+## ソルバー関数
++ rkf45
+    + ルンゲ＝クッタ法 (Runge-Kutta method)
++ dopri5
+    + ドルマン=プリンス法 (Dormand-Prince method order 5)
++ dop853
+    + ドルマン=プリンス法 (Dormand-Prince method order 8)
 
 
-## Example
-The example in https://zenn.dev/yonda/articles/71aef28aa46fcb (in Japanese)
+## 例
+[Javascriptで8次のルンゲクッタ](https://zenn.dev/yonda/articles/71aef28aa46fcb)
+に記載されている例
 
 - $\dfrac{dx_{0}}{dt} = x_{1}$
 - $\dfrac{dx_{1}}{dt} = -2\gamma x_{1} - x_{0}$
-- parameter values: $\gamma = 0.15$
-- initial values: $x_{0} = 1, x_{1} = -0.15$
+- パラメータ値: $\gamma = 0.15$
+- 初期値: $x_{0} = 1, x_{1} = -0.15$
 
-### Import required types and functions
+### 必要な型および関数のインポート
 ```
 import { TypeFuncRes, TypeParam } from "./solve_ode";
 import { SolveOde, rkf45, dopri5, dop853 } from "./solve_ode";
@@ -40,7 +45,7 @@ import { SolveOde, rkf45, dopri5, dop853 } from "./solve_ode";
 - `TypeParam`: `number[]`
 - `TypeFuncRes`: `number[]`
 
-### Define of ordinary differential equations (ODEs)
+### 常微分方程式の定義
 
 ```typescript
 // Definition of ODE
@@ -52,7 +57,7 @@ function func(x: number[], param: TypeParam, _t: number): TypeFuncRes {
 }
 ```
 
-### Set and parse parameter values
+### パラメータ値の設定および解析
 ```typescript
 let param = [0.15];
 let init = [1, -1.5];
@@ -67,7 +72,7 @@ let res = SolveOde(
 console.log(res);
 ```
 
-### Execute
+### 実行
 ```bash
 # download from repository
 npm install
@@ -76,9 +81,9 @@ npm run build  # bundle using webpack
 node dist/main.js
 ```
 
-The type of return values is `[number[], number[][]]`
-- element 1： array of times
-- element 2： array of "array of values"
+返り値は`[number[], number[][]]`
+- 要素1： 時間の配列
+- 要素2： "値の配列"の配列
 
 ```typescript
 [
