@@ -2,7 +2,7 @@
   "name": "solveode",
   "version": "2.0.0",
   "description": "",
-  "main": "sample.js",
+  "main": "",
   "scripts": {
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
