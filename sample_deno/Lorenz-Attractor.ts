@@ -1,8 +1,7 @@
 // deno run --allow-write Lorenz-Attractor.ts
-
 import { writeFile } from "https://deno.land/std@0.86.0/node/fs.ts";
-import { TypeParam, TypeFuncRes } from "./solve_ode.ts";
-import { SolveOde, dop853 } from "./solve_ode.ts";
+import { TypeParam, TypeFuncRes } from "../ts/solve_ode.ts";
+import { SolveOde, dop853 } from "../ts/solve_ode.ts";
 
 // https://en.wikipedia.org/wiki/Lorenz_system
 // ODE
@@ -32,13 +31,13 @@ let [time, value] = SolveOde(
 
 
 // save results
-let csv_string  = ""; 
+let output_string  = "# x y z\n"; 
 for (let d of value) {
-    csv_string += d.join(",");
-    csv_string += "\n";
+    output_string += d.join(" ");
+    output_string += "\n";
 }
 
-writeFile("result/Lorenz-Attractor.csv", csv_string, (err, value) => {
+writeFile("result/Lorenz-Attractor.txt", output_string, (err) => {
     if (err) {
         console.log(err);
     } else {
